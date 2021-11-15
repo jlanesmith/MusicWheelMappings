@@ -7,35 +7,72 @@ o.outDevice_("Windows WASAPI : Speakers");
 
 (
 ~vibrato_key = 25;
-~bend_keys = [21, 23, 24, 26];
+~bend_keys_1 = [21, 23, 24, 26];
+~bend_keys_2 = [21, 23, 24, 26, 28];
 
-~vibrato_strat = 2;
+~vibrato_strat = 1;
 ~is_vibrato = 0;
 ~vibrato_speed = 0;
 
-~bend_strat = 1;
+~bend_strat = 2;
+~initial_key = 2; // 0 to 4
+
+// Values for bend_strat 2
+~bend_value_array_0 = [0,0,0,-1,-2];
+~bend_value_array_1 = [0.5,0,0,-1,-1.5];
+~bend_value_array_2 = [1,0.5,0,-0.5,-1];
+~bend_value_array_3 = [1.5,1,0,0,-0.5];
+~bend_value_array_4 = [2,1,0,0,0];
+
 
 MIDIdef.noteOn(\noteonTest, {
 	arg vel, nn, chan, src, bend_speed;
 	[vel, nn].postln;
-	bend_speed = max(2 - (vel/56), 0); // Make it easier to get fast bending
-	if (~bend_keys.includes(nn), {
-		switch(nn,
-			~bend_keys[0], {~notes.do{arg synth; synth.set(\bend_final, -2); synth.set(\bend_speed, bend_speed)}},
-			~bend_keys[1], {~notes.do{arg synth; synth.set(\bend_final, -1); synth.set(\bend_speed, bend_speed)}},
-			~bend_keys[2], {~notes.do{arg synth; synth.set(\bend_final, 1); synth.set(\bend_speed, bend_speed)}},
-			~bend_keys[3], {~notes.do{arg synth; synth.set(\bend_final, 2); synth.set(\bend_speed, bend_speed)}}
-		)
-	}, {});
 
+	// Vibrato
 	if (nn == ~vibrato_key, {
 		~is_vibrato = 1;
 		~vibrato_speed = vel;
 		~notes.do{arg synth; synth.set(\is_vibrato, 1); synth.set(\vibrato_speed, ~vibrato_speed)};
 	},{});
 
+	// Bending strat 1
+	bend_speed = max(2 - (vel/56), 0.2); // Make it easier to get fast bending
+	if ((~bend_strat == 1) && (~bend_keys_1.includes(nn)), {
+		switch(nn,
+			~bend_keys_1[0], {~notes.do{arg synth; synth.set(\bend_final, -2); synth.set(\bend_speed, bend_speed)}},
+			~bend_keys_1[1], {~notes.do{arg synth; synth.set(\bend_final, -1); synth.set(\bend_speed, bend_speed)}},
+			~bend_keys_1[2], {~notes.do{arg synth; synth.set(\bend_final, 1); synth.set(\bend_speed, bend_speed)}},
+			~bend_keys_1[3], {~notes.do{arg synth; synth.set(\bend_final, 2); synth.set(\bend_speed, bend_speed)}}
+		)
+	}, {});
 
-	if (nn > ~bend_keys[3], {
+	// Bending strat 2
+	if ((~bend_strat == 2) && (~bend_keys_2.includes(nn)), {
+
+		if ((~initial_key == 2) && (nn != ~bend_keys_2[2]), {
+			switch(nn,
+				~bend_keys_2[0], {~initial_key = 0;},
+				~bend_keys_2[1], {~initial_key = 1;},
+				~bend_keys_2[2], {~initial_key = 2;},
+				~bend_keys_2[3], {~initial_key = 3;},
+				~bend_keys_2[4], {~initial_key = 4;})},
+		{
+			if ((~initial_key != 2) && (nn == ~bend_keys_2[~initial_key]), {~initial_key = 2}, {});
+		});
+
+		k = ~initial_key;
+		switch(nn,
+			~bend_keys_2[0], {~notes.do{arg synth; synth.set(\bend_final, ~bend_value_array_0[k]); synth.set(\bend_speed, bend_speed)}},
+			~bend_keys_2[1], {~notes.do{arg synth; synth.set(\bend_final, ~bend_value_array_1[k]); synth.set(\bend_speed, bend_speed)}},
+			~bend_keys_2[2], {~notes.do{arg synth; synth.set(\bend_final, ~bend_value_array_2[k]); synth.set(\bend_speed, bend_speed)}},
+			~bend_keys_2[3], {~notes.do{arg synth; synth.set(\bend_final, ~bend_value_array_3[k]); synth.set(\bend_speed, bend_speed)}},
+			~bend_keys_2[4], {~notes.do{arg synth; synth.set(\bend_final, ~bend_value_array_4[k]); synth.set(\bend_speed, bend_speed)}}
+		)
+	}, {});
+
+	// Regular notes
+	if (nn > ~bend_keys_2[4], {
 		~notes[nn] = Synth.new(
 			\tone,
 			[
@@ -43,6 +80,7 @@ MIDIdef.noteOn(\noteonTest, {
 				\amp, vel.linexp(1,127,0.01,0.3),
 				\gate, 1,
 				\bend_final, 0,
+				\bend_speed, 0,
 				\is_vibrato, ~is_vibrato,
 				\vibrato_speed, ~vibrato_speed,
 			]
@@ -59,14 +97,16 @@ MIDIdef.noteOff(\noteOffTest, {
 
 	if ((~vibrato_strat == 2) && (nn == ~vibrato_key), {~is_vibrato = 0}, {});
 
-	if (~bend_keys.includes(nn), {
+	if ((~bend_strat == 1) && (~bend_keys_1.includes(nn)), {
 		switch(nn,
-			~bend_keys[0], {~notes.do{arg synth; synth.set(\bend_final, 0)}},
-			~bend_keys[1], {~notes.do{arg synth; synth.set(\bend_final, 0)}},
-			~bend_keys[2], {~notes.do{arg synth; synth.set(\bend_final, 0)}},
-			~bend_keys[3], {~notes.do{arg synth; synth.set(\bend_final, 0)}}
+			~bend_keys_1[0], {~notes.do{arg synth; synth.set(\bend_final, 0)}},
+			~bend_keys_1[1], {~notes.do{arg synth; synth.set(\bend_final, 0)}},
+			~bend_keys_1[2], {~notes.do{arg synth; synth.set(\bend_final, 0)}},
+			~bend_keys_1[3], {~notes.do{arg synth; synth.set(\bend_final, 0)}}
 		)
 	}, {});
+
+	if ((~bend_strat == 2) && (nn > ~bend_keys_2[4]), {~initial_key = 2}, {});
 
 	~notes[nn].set(\gate, 0);
 	~notes[nn] = nil;
@@ -88,6 +128,7 @@ SynthDef.new(\tone, {
 	if ((~vibrato_strat == 1), {
 		// Make cool function which reaches asymptote of 0.03
 		vib = -0.03*is_vibrato/((vibrato_speed/240+0.05)*Sweep.kr(0, 1)+1) + (0.03*is_vibrato);
+		// vib = 0.03*Sweep.kr(0, 1);
 	},{
 		vib = is_vibrato*vibrato_speed/3000;
 	});
@@ -105,6 +146,5 @@ x = Synth.new(\tone, [\gate, 1]);
 x.set(\gate, 0);
 
 ~notes = Array.newClear(128);
-
 
 s.boot;
