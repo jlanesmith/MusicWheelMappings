@@ -7,10 +7,10 @@ o.outDevice_("Windows WASAPI : Speakers");
 
 (
 ~vibrato_strat = 1;
-~bend_strat = 2;
+~bend_strat = 1;
 
 ~vibrato_key = 25;
-~bend_keys_1 = [21, 23, 24, 26];
+~bend_keys_1 = [21, 23, 26, 28];
 ~bend_keys_2 = [21, 23, 24, 26, 28];
 
 ~is_vibrato = 0;
