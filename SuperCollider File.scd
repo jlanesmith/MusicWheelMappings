@@ -6,16 +6,16 @@ o.inDevice_("Windows WASAPI : Microphone");
 o.outDevice_("Windows WASAPI : Speakers");
 
 (
+~vibrato_strat = 1;
+~bend_strat = 2;
+
 ~vibrato_key = 25;
 ~bend_keys_1 = [21, 23, 24, 26];
 ~bend_keys_2 = [21, 23, 24, 26, 28];
 
-~vibrato_strat = 1;
 ~is_vibrato = 0;
 ~vibrato_speed = 0;
-
-~bend_strat = 2;
-~initial_key = 2; // 0 to 4
+~initial_key = 2; // 0 to 4, for bending strat 2
 
 // Values for bend_strat 2
 ~bend_value_array_0 = [0,0,0,-1,-2];
@@ -128,7 +128,6 @@ SynthDef.new(\tone, {
 	if ((~vibrato_strat == 1), {
 		// Make cool function which reaches asymptote of 0.03
 		vib = -0.03*is_vibrato/((vibrato_speed/240+0.05)*Sweep.kr(0, 1)+1) + (0.03*is_vibrato);
-		// vib = 0.03*Sweep.kr(0, 1);
 	},{
 		vib = is_vibrato*vibrato_speed/3000;
 	});
