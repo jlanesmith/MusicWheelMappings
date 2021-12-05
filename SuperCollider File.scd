@@ -6,23 +6,24 @@ o.inDevice_("Windows WASAPI : Microphone");
 o.outDevice_("Windows WASAPI : Speakers");
 
 (
-~vibrato_strat = 1;
+~vibrato_strat = 2;
 ~bend_strat = 1;
 
 ~vibrato_key = 25;
+~vibrato_off_key = 27;
 ~bend_keys_1 = [21, 23, 26, 28];
 ~bend_keys_2 = [21, 23, 24, 26, 28];
 
 ~is_vibrato = 0;
 ~vibrato_speed = 0;
-~initial_key = 2; // 0 to 4, for bending strat 2
+~initial_key = -1; // 0 to 4, for bending strat 2
 
 // Values for bend_strat 2
-~bend_value_array_0 = [0,0,0,-1,-2];
-~bend_value_array_1 = [0.5,0,0,-1,-1.5];
+~bend_value_array_0 = [0,-0.5,-1,-1.5,-2];
+~bend_value_array_1 = [0.5,0,-0.5,-1,-1.5];
 ~bend_value_array_2 = [1,0.5,0,-0.5,-1];
-~bend_value_array_3 = [1.5,1,0,0,-0.5];
-~bend_value_array_4 = [2,1,0,0,0];
+~bend_value_array_3 = [1.5,1,0.5,0,-0.5];
+~bend_value_array_4 = [2,1.5,1,0.5,0];
 
 
 MIDIdef.noteOn(\noteonTest, {
@@ -34,6 +35,10 @@ MIDIdef.noteOn(\noteonTest, {
 		~is_vibrato = 1;
 		~vibrato_speed = vel;
 		~notes.do{arg synth; synth.set(\is_vibrato, 1); synth.set(\vibrato_speed, ~vibrato_speed)};
+	},{});
+	if (nn == ~vibrato_off_key, {
+		~is_vibrato = 0;
+		~notes.do{arg synth; synth.set(\is_vibrato, 0)};
 	},{});
 
 	// Bending strat 1
@@ -50,7 +55,7 @@ MIDIdef.noteOn(\noteonTest, {
 	// Bending strat 2
 	if ((~bend_strat == 2) && (~bend_keys_2.includes(nn)), {
 
-		if ((~initial_key == 2) && (nn != ~bend_keys_2[2]), {
+		if (~initial_key == -1, {
 			switch(nn,
 				~bend_keys_2[0], {~initial_key = 0;},
 				~bend_keys_2[1], {~initial_key = 1;},
@@ -58,7 +63,7 @@ MIDIdef.noteOn(\noteonTest, {
 				~bend_keys_2[3], {~initial_key = 3;},
 				~bend_keys_2[4], {~initial_key = 4;})},
 		{
-			if ((~initial_key != 2) && (nn == ~bend_keys_2[~initial_key]), {~initial_key = 2}, {});
+			if ((~initial_key != -1) && (nn == ~bend_keys_2[~initial_key]), {~initial_key = -1}, {});
 		});
 
 		k = ~initial_key;
@@ -106,7 +111,7 @@ MIDIdef.noteOff(\noteOffTest, {
 		)
 	}, {});
 
-	if ((~bend_strat == 2) && (nn > ~bend_keys_2[4]), {~initial_key = 2}, {});
+	if ((~bend_strat == 2) && (nn > ~bend_keys_2[4]), {~initial_key = -1}, {});
 
 	~notes[nn].set(\gate, 0);
 	~notes[nn] = nil;
